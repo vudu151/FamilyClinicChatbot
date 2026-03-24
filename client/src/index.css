@@ -43,74 +43,75 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  /* Family AI Green Wellness Color System */
+  --primary: #4CAF50;
+  --primary-foreground: #FFFFFF;
+  --sidebar-primary: #45A049;
+  --sidebar-primary-foreground: #FFFFFF;
+  --chart-1: #81C784;
+  --chart-2: #66BB6A;
+  --chart-3: #4CAF50;
+  --chart-4: #43A047;
+  --chart-5: #388E3C;
+  --radius: 0.75rem;
+  --background: #F5F5F5;
+  --foreground: #212121;
+  --card: #FFFFFF;
+  --card-foreground: #212121;
+  --popover: #FFFFFF;
+  --popover-foreground: #212121;
+  --secondary: #FFC107;
+  --secondary-foreground: #212121;
+  --muted: #E0E0E0;
+  --muted-foreground: #757575;
+  --accent: #2196F3;
+  --accent-foreground: #FFFFFF;
+  --destructive: #F44336;
+  --destructive-foreground: #FFFFFF;
+  --border: #E0E0E0;
+  --input: #FFFFFF;
+  --ring: #4CAF50;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #212121;
+  --sidebar-accent: #FFC107;
+  --sidebar-accent-foreground: #212121;
+  --sidebar-border: #E0E0E0;
+  --sidebar-ring: #4CAF50;
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --primary: #66BB6A;
+  --primary-foreground: #1B5E20;
+  --sidebar-primary: #4CAF50;
+  --sidebar-primary-foreground: #FFFFFF;
+  --background: #121212;
+  --foreground: #E0E0E0;
+  --card: #1E1E1E;
+  --card-foreground: #E0E0E0;
+  --popover: #1E1E1E;
+  --popover-foreground: #E0E0E0;
+  --secondary: #FFB300;
+  --secondary-foreground: #1B1B1B;
+  --muted: #424242;
+  --muted-foreground: #BDBDBD;
+  --accent: #42A5F5;
+  --accent-foreground: #0D47A1;
+  --destructive: #EF5350;
+  --destructive-foreground: #FFFFFF;
+  --border: #424242;
+  --input: #2C2C2C;
+  --ring: #66BB6A;
+  --chart-1: #81C784;
+  --chart-2: #66BB6A;
+  --chart-3: #4CAF50;
+  --chart-4: #43A047;
+  --chart-5: #388E3C;
+  --sidebar: #1E1E1E;
+  --sidebar-foreground: #E0E0E0;
+  --sidebar-accent: #FFB300;
+  --sidebar-accent-foreground: #1B1B1B;
+  --sidebar-border: #424242;
+  --sidebar-ring: #66BB6A;
 }
 
 @layer base {
@@ -119,17 +120,93 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
-  button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  [type="button"]:not(:disabled),
-  [type="submit"]:not(:disabled),
-  [type="reset"]:not(:disabled),
-  a[href],
-  select:not(:disabled),
-  input[type="checkbox"]:not(:disabled),
-  input[type="radio"]:not(:disabled) {
-    @apply cursor-pointer;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  /* Smooth transitions for all interactive elements */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  /* Page transition animations */
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-in-up {
+    animation: slideInUp 0.3s ease-in-out;
+  }
+  
+  .animate-slide-in-down {
+    animation: slideInDown 0.3s ease-in-out;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .text-title-lg {
+    @apply text-2xl font-bold;
+    font-family: 'Poppins', sans-serif;
+  }
+  .text-title-md {
+    @apply text-xl font-bold;
+    font-family: 'Poppins', sans-serif;
+  }
+  .text-title-sm {
+    @apply text-lg font-semibold;
+    font-family: 'Poppins', sans-serif;
+  }
+  .text-body-lg {
+    @apply text-base font-normal;
+    font-family: 'Inter', sans-serif;
+  }
+  .text-body-md {
+    @apply text-sm font-normal;
+    font-family: 'Inter', sans-serif;
+  }
+  .text-body-sm {
+    @apply text-xs font-normal;
+    font-family: 'Inter', sans-serif;
+  }
+  .shadow-card {
+    @apply shadow-md;
+  }
+  .rounded-card {
+    @apply rounded-2xl;
   }
 }
 
