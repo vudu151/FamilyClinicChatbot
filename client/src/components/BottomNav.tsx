@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Calendar, CheckSquare, User } from 'lucide-react';
+import { Home, MessageCircle, Heart, Pill, User } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 interface NavItem {
@@ -12,11 +12,11 @@ export default function BottomNav() {
   const [location, navigate] = useLocation();
 
   const navItems: NavItem[] = [
-    { id: 'home', icon: <Home size={24} />, label: 'Home', path: '/home' },
-    { id: 'chat', icon: <MessageCircle size={24} />, label: 'Chat', path: '/chat-family' },
-    { id: 'calendar', icon: <Calendar size={24} />, label: 'Calendar', path: '/calendar' },
-    { id: 'tasks', icon: <CheckSquare size={24} />, label: 'Tasks', path: '/tasks' },
-    { id: 'profile', icon: <User size={24} />, label: 'Profile', path: '/profile' },
+    { id: 'home', icon: <Home size={24} />, label: 'Trang chủ', path: '/home' },
+    { id: 'consultation', icon: <MessageCircle size={24} />, label: 'Tư vấn', path: '/consultation' },
+    { id: 'health', icon: <Heart size={24} />, label: 'Sức khỏe', path: '/health' },
+    { id: 'medicine', icon: <Pill size={24} />, label: 'Thuốc', path: '/medicine' },
+    { id: 'profile', icon: <User size={24} />, label: 'Hồ sơ', path: '/profile' },
   ];
 
   const isActive = (path: string) => location === path;

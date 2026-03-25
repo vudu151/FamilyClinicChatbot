@@ -43,16 +43,16 @@
 }
 
 :root {
-  /* Family AI Green Wellness Color System */
-  --primary: #4CAF50;
+  /* HealthCare AI Medical Color System */
+  --primary: #0066CC;
   --primary-foreground: #FFFFFF;
-  --sidebar-primary: #45A049;
+  --sidebar-primary: #0052A3;
   --sidebar-primary-foreground: #FFFFFF;
-  --chart-1: #81C784;
-  --chart-2: #66BB6A;
-  --chart-3: #4CAF50;
-  --chart-4: #43A047;
-  --chart-5: #388E3C;
+  --chart-1: #4D94FF;
+  --chart-2: #0066CC;
+  --chart-3: #0052A3;
+  --chart-4: #003D7A;
+  --chart-5: #002E5C;
   --radius: 0.75rem;
   --background: #F5F5F5;
   --foreground: #212121;
@@ -60,11 +60,11 @@
   --card-foreground: #212121;
   --popover: #FFFFFF;
   --popover-foreground: #212121;
-  --secondary: #FFC107;
-  --secondary-foreground: #212121;
+  --secondary: #FF6B6B;
+  --secondary-foreground: #FFFFFF;
   --muted: #E0E0E0;
   --muted-foreground: #757575;
-  --accent: #2196F3;
+  --accent: #00BCD4;
   --accent-foreground: #FFFFFF;
   --destructive: #F44336;
   --destructive-foreground: #FFFFFF;
@@ -80,32 +80,32 @@
 }
 
 .dark {
-  --primary: #66BB6A;
-  --primary-foreground: #1B5E20;
-  --sidebar-primary: #4CAF50;
+  --primary: #4D94FF;
+  --primary-foreground: #001F4D;
+  --sidebar-primary: #0066CC;
   --sidebar-primary-foreground: #FFFFFF;
-  --background: #121212;
+  --background: #0A0E27;
   --foreground: #E0E0E0;
-  --card: #1E1E1E;
+  --card: #1A1F3A;
   --card-foreground: #E0E0E0;
-  --popover: #1E1E1E;
+  --popover: #1A1F3A;
   --popover-foreground: #E0E0E0;
-  --secondary: #FFB300;
-  --secondary-foreground: #1B1B1B;
+  --secondary: #FF8A80;
+  --secondary-foreground: #FFFFFF;
   --muted: #424242;
   --muted-foreground: #BDBDBD;
-  --accent: #42A5F5;
-  --accent-foreground: #0D47A1;
+  --accent: #00BCD4;
+  --accent-foreground: #001F3F;
   --destructive: #EF5350;
   --destructive-foreground: #FFFFFF;
   --border: #424242;
   --input: #2C2C2C;
-  --ring: #66BB6A;
-  --chart-1: #81C784;
-  --chart-2: #66BB6A;
-  --chart-3: #4CAF50;
-  --chart-4: #43A047;
-  --chart-5: #388E3C;
+  --ring: #4D94FF;
+  --chart-1: #4D94FF;
+  --chart-2: #0066CC;
+  --chart-3: #0052A3;
+  --chart-4: #003D7A;
+  --chart-5: #002E5C;
   --sidebar: #1E1E1E;
   --sidebar-foreground: #E0E0E0;
   --sidebar-accent: #FFB300;
