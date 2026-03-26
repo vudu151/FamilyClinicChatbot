@@ -1,124 +1,141 @@
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { ChevronRight, AlertCircle, MessageSquare, Pill, Users, Activity } from 'lucide-react';
+import { Bell, Settings, MapPin, Clock, Heart, Pill, FileText, Shield, MessageSquare, AlertCircle } from 'lucide-react';
 
 export default function Home() {
   const [, navigate] = useLocation();
 
+  const mainFeatures = [
+    { icon: '👨‍⚕️', label: 'Tìm bác sĩ', action: '/doctors' },
+    { icon: '🍽️', label: 'Ăn gì hôm nay', action: '#' },
+    { icon: '🏥', label: 'Phòng khám gần', action: '#' },
+    { icon: '📅', label: 'Đặt lịch khám', action: '#' },
+  ];
+
+  const secondaryFeatures = [
+    { icon: <Clock size={24} />, label: 'Lịch sử khám', action: '/health' },
+    { icon: <MessageSquare size={24} />, label: 'Tư vấn', action: '/consultation' },
+    { icon: <Shield size={24} />, label: 'Bảo hiểm', action: '#' },
+  ];
+
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header with Emergency Button */}
-      <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-6 rounded-b-3xl shadow-md animate-slide-in-down">
+    <div className="min-h-screen bg-background flex flex-col pb-24 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-4 pt-4 pb-6 animate-slide-in-down">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-title-lg mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>Sức Khỏe Của Bạn</h1>
-            <p className="text-primary-foreground/90">Hôm nay bạn khỏe không?</p>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl">
+              👤
+            </div>
+            <div>
+              <p className="text-body-sm opacity-90">Xin chào</p>
+              <p className="text-title-sm font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Nguyễn Văn A
+              </p>
+            </div>
           </div>
-          <button
-            onClick={() => navigate('/emergency')}
-            className="bg-secondary text-secondary-foreground px-4 py-2 rounded-full font-bold text-sm hover:bg-secondary/90 transition-smooth active:scale-95 flex items-center gap-2"
-          >
-            <AlertCircle size={18} />
-            SOS
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+              <Bell size={20} />
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <Settings size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Notification Banner */}
+        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 flex items-start gap-2">
+          <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-body-sm font-medium">Kết quả khám gần đây</p>
+            <p className="text-body-sm opacity-90">Xem kết quả khám từ 15/03/2026</p>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6 space-y-4 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
-        {/* Health Status Card */}
-        <div className="bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-card p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-title-sm text-foreground mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                📊 Tình trạng sức khỏe
-              </h3>
-              <p className="text-body-sm text-muted-foreground">Bình thường - Tiếp tục theo dõi</p>
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+        {/* Main Features Grid (4 items) */}
+        <div className="grid grid-cols-4 gap-3">
+          {mainFeatures.map((feature, idx) => (
+            <button
+              key={idx}
+              onClick={() => feature.action !== '#' && navigate(feature.action)}
+              className="flex flex-col items-center gap-2 p-3 bg-white border border-border rounded-lg hover:shadow-card transition-all duration-300 active:scale-95"
+            >
+              <div className="text-3xl">{feature.icon}</div>
+              <p className="text-body-xs text-foreground text-center font-medium leading-tight">
+                {feature.label}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        {/* Hero Banner Image */}
+        <div className="relative rounded-lg overflow-hidden shadow-card animate-slide-in-up" style={{ animationDelay: '0.15s' }}>
+          <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-4xl mb-2">🏥</p>
+              <p className="text-title-sm font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Tìm bác sĩ gần nhất
+              </p>
+              <p className="text-body-sm text-muted-foreground mt-1">
+                Kết nối với các chuyên gia y tế
+              </p>
             </div>
-            <Activity className="text-accent" size={20} />
           </div>
         </div>
 
-        {/* Consultation Card */}
-        <div
-          onClick={() => navigate('/consultation')}
-          className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-card p-4 cursor-pointer hover:shadow-card transition-all duration-300 active:scale-95"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-title-sm text-foreground mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                💬 Tư vấn sức khỏe
-              </h3>
-              <p className="text-body-sm text-muted-foreground">Chat với AI hoặc bác sĩ</p>
-            </div>
-            <ChevronRight className="text-primary" size={20} />
+        {/* Secondary Features Grid (3 items) */}
+        <div>
+          <p className="text-title-sm text-foreground mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            Dịch vụ khác
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {secondaryFeatures.map((feature, idx) => (
+              <button
+                key={idx}
+                onClick={() => feature.action !== '#' && navigate(feature.action)}
+                className="flex flex-col items-center gap-2 p-3 bg-white border border-border rounded-lg hover:shadow-card transition-all duration-300 active:scale-95"
+              >
+                <div className="text-primary">{feature.icon}</div>
+                <p className="text-body-xs text-foreground text-center font-medium leading-tight">
+                  {feature.label}
+                </p>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Doctor Connection Card */}
-        <div
-          onClick={() => navigate('/doctors')}
-          className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-card p-4 cursor-pointer hover:shadow-card transition-all duration-300 active:scale-95"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-title-sm text-foreground mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                👨‍⚕️ Kết nối bác sĩ
-              </h3>
-              <p className="text-body-sm text-muted-foreground">Đặt lịch tư vấn trực tuyến</p>
-            </div>
-            <Users className="text-primary" size={20} />
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-3 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
+            <p className="text-body-sm text-muted-foreground mb-2">Lần khám cuối</p>
+            <p className="text-title-sm text-foreground font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              15/03/2026
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-lg p-4">
+            <p className="text-body-sm text-muted-foreground mb-2">Trạng thái sức khỏe</p>
+            <p className="text-title-sm text-accent font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Bình thường
+            </p>
           </div>
         </div>
 
-        {/* Medicine Consultation Card */}
-        <div
-          onClick={() => navigate('/medicine')}
-          className="bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-card p-4 cursor-pointer hover:shadow-card transition-all duration-300 active:scale-95"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-title-sm text-foreground mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                💊 Tư vấn thuốc
-              </h3>
-              <p className="text-body-sm text-muted-foreground">Hỏi về tác dụng và liều dùng</p>
-            </div>
-            <Pill className="text-secondary" size={20} />
-          </div>
-        </div>
-
-        {/* Health History Card */}
-        <div className="bg-white border border-border rounded-card p-4 overflow-hidden shadow-sm">
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-title-sm text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              📋 Lịch sử sức khỏe
-            </h3>
-            <ChevronRight className="text-muted-foreground" size={20} />
-          </div>
-          <div className="space-y-2">
-            <p className="text-body-sm text-muted-foreground">Lần khám cuối: 15/03/2026</p>
-            <p className="text-body-sm text-muted-foreground">Chẩn đoán: Cảm lạnh thông thường</p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3 mt-6 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+        {/* Emergency Button */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.25s' }}>
           <Button
-            onClick={() => navigate('/consultation')}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-lg h-12 transition-smooth active:scale-95"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
+            onClick={() => navigate('/emergency')}
+            className="w-full bg-gradient-to-r from-secondary to-secondary/80 text-secondary-foreground hover:shadow-lg font-bold rounded-lg h-12 flex items-center justify-center gap-2 transition-smooth active:scale-95"
           >
-            <MessageSquare size={18} className="mr-2" />
-            Tư vấn
-          </Button>
-          <Button
-            onClick={() => navigate('/doctors')}
-            variant="outline"
-            className="border border-border rounded-lg h-12 font-bold transition-smooth active:scale-95"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
-          >
-            👨‍⚕️ Bác sĩ
+            <AlertCircle size={20} />
+            🚨 Gọi Cấp Cứu
           </Button>
         </div>
       </div>
