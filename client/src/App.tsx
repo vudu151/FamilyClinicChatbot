@@ -4,7 +4,6 @@ import NotFound from "@/pages/NotFound";
 import Splash from "@/pages/Splash";
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
-import Consultation from "@/pages/Consultation";
 import Doctors from "@/pages/Doctors";
 import Medicine from "@/pages/Medicine";
 import Emergency from "@/pages/Emergency";

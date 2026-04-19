@@ -13,16 +13,14 @@ export default function BottomNav() {
 
   const navItems: NavItem[] = [
     { id: 'home', icon: <Home size={24} />, label: 'Trang chủ', path: '/home' },
-    { id: 'consultation', icon: <MessageCircle size={24} />, label: 'Tư vấn', path: '/consultation' },
-    { id: 'health', icon: <Heart size={24} />, label: 'Sức khỏe', path: '/health' },
-    { id: 'medicine', icon: <Pill size={24} />, label: 'Thuốc', path: '/medicine' },
+    { id: 'consultation', icon: <MessageCircle size={24} />, label: 'Hỏi Bác Sĩ (AI)', path: '/consultation' },
     { id: 'profile', icon: <User size={24} />, label: 'Hồ sơ', path: '/profile' },
   ];
 
   const isActive = (path: string) => location === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 glass border-t border-border shadow-[0_-4px_16px_rgba(0,0,0,0.05)] z-50">
       <div className="flex justify-around items-center h-20">
         {navItems.map((item) => (
           <button

@@ -43,40 +43,40 @@
 }
 
 :root {
-  /* HealthCare AI Medical Color System */
-  --primary: #0066CC;
-  --primary-foreground: #FFFFFF;
-  --sidebar-primary: #0052A3;
-  --sidebar-primary-foreground: #FFFFFF;
-  --chart-1: #4D94FF;
-  --chart-2: #0066CC;
-  --chart-3: #0052A3;
-  --chart-4: #003D7A;
-  --chart-5: #002E5C;
-  --radius: 0.75rem;
-  --background: #F5F5F5;
-  --foreground: #212121;
-  --card: #FFFFFF;
-  --card-foreground: #212121;
-  --popover: #FFFFFF;
-  --popover-foreground: #212121;
-  --secondary: #FF6B6B;
-  --secondary-foreground: #FFFFFF;
-  --muted: #E0E0E0;
-  --muted-foreground: #757575;
-  --accent: #00BCD4;
-  --accent-foreground: #FFFFFF;
-  --destructive: #F44336;
-  --destructive-foreground: #FFFFFF;
-  --border: #E0E0E0;
-  --input: #FFFFFF;
-  --ring: #4CAF50;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #212121;
-  --sidebar-accent: #FFC107;
-  --sidebar-accent-foreground: #212121;
-  --sidebar-border: #E0E0E0;
-  --sidebar-ring: #4CAF50;
+  /* Modern Medical AI Color System (Teal & Soft Azure) */
+  --primary: #0d9488; /* teal-500 */
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #0f766e; /* teal-600 */
+  --sidebar-primary-foreground: #ffffff;
+  --chart-1: #14b8a6;
+  --chart-2: #0d9488;
+  --chart-3: #0f766e;
+  --chart-4: #115e59;
+  --chart-5: #134e4a;
+  --radius: 1rem;
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a; /* slate-900 */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --secondary: #e2e8f0; /* slate-200 */
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9; /* slate-100 */
+  --muted-foreground: #64748b; /* slate-500 */
+  --accent: #dbeafe; /* blue-100 */
+  --accent-foreground: #1e3a8a; /* blue-900 */
+  --destructive: #ef4444; /* red-500 */
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #ffffff;
+  --ring: #0d9488;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0d9488;
 }
 
 .dark {
@@ -203,10 +203,18 @@
     font-family: 'Inter', sans-serif;
   }
   .shadow-card {
-    @apply shadow-md;
+    @apply shadow-sm hover:shadow-md;
   }
   .rounded-card {
     @apply rounded-2xl;
+  }
+
+  /* Glassmorphism Utility */
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-sm;
+  }
+  .dark .glass {
+    @apply bg-slate-900/70 backdrop-blur-md border border-white/10 shadow-sm;
   }
 }
 

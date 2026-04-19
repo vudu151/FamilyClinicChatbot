@@ -2,6 +2,10 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import chatRouter from "./routes/chat";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +13,13 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Parse JSON payloads (increase limit for base64 images)
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+  // API Routes
+  app.use("/api/chat", chatRouter);
 
   // Serve static files from dist/public in production
   const staticPath =

@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { ChevronLeft, Send, Lightbulb, MessageCircle, Mic, Image as ImageIcon, Square } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { ChevronLeft, Send, Lightbulb, MessageCircle, Mic, Image as ImageIcon, Square, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 interface Message {
   id: string;
@@ -29,9 +29,9 @@ export default function Consultation() {
     {
       id: '1',
       sender: 'ai',
-      text: 'Xin chào! Tôi là HealthCare AI, trợ lý sức khỏe thông minh. Tôi có thể giúp bạn tư vấn về các vấn đề sức khỏe, triệu chứng, và hướng dẫn khi cần gặp bác sĩ. Bạn cảm thấy thế nào hôm nay?',
-      timestamp: '10:00',
-      senderName: 'HealthCare AI',
+      text: 'Xin chào! Tôi là Trợ lý AI của Phòng Khám Gia Đình. Tôi có thể giúp gì cho bạn hôm nay?',
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      senderName: 'Trợ lý Y tế',
       type: 'text',
     },
   ]);
@@ -39,37 +39,119 @@ export default function Consultation() {
   const [consultationType, setConsultationType] = useState<'ai' | 'doctor'>('ai');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const hasInitialized = useRef(false);
 
-  const handleSend = () => {
-    if (inputText.trim()) {
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q');
+      const tab = params.get('tab');
+      
+      if (q) {
+        // Auto trigger text query
+        setIsLoading(true);
+        setInputText(''); // ensure it's empty
+        const userMessage: Message = {
+          id: String(Date.now()),
+          sender: 'user',
+          text: q,
+          timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          type: 'text',
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        callAI(q);
+      } else if (tab === 'image') {
+        // Just trigger the file input click after a short delay
+        setTimeout(() => {
+           fileInputRef.current?.click();
+        }, 300);
+      }
+    } catch(e) {}
+  }, []);
+
+  const callAI = async (text?: string, imageBase64?: string) => {
+    if (consultationType === 'doctor') {
+      setTimeout(() => {
+        const docMsg: Message = {
+           id: String(Date.now()),
+           sender: 'doctor',
+           text: 'Xin chào, tôi là Dr. Nguyễn Văn A, chuyên khoa Nội tổng quát. Tôi sẽ giúp bạn. Bạn có thể mô tả chi tiết hơn về triệu chứng không?',
+           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+           senderName: 'Dr. Nguyễn Văn A',
+           type: 'text',
+        };
+        setMessages((prev) => [...prev, docMsg]);
+        setIsLoading(false);
+      }, 500);
+      return;
+    }
+
+    try {
+      const history = messages
+        .filter((m) => m.sender === 'user' || m.sender === 'ai')
+        .map((m) => {
+          // Chỉ gửi qua history những đoạn text, bỏ qua hình ảnh để tối ưu payload của lịch sử
+          const textPart = m.type === 'text' ? m.text : (m.type === 'image' ? '[Hình ảnh ngưởi bệnh gửi]' : '[Tin nhắn thoại]');
+          return {
+            role: m.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: textPart || "" }]
+          };
+        });
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, imageBase64, history }),
+      });
+      
+      const data = await res.json();
+      
+      const aiMessage: Message = {
+        id: String(Date.now()),
+        sender: 'ai',
+        text: data.response || "Lỗi xử lý từ máy chủ.",
+        timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        senderName: 'Trợ lý Y tế',
+        type: 'text',
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error(error);
+      const errorMessage: Message = {
+        id: String(Date.now()),
+        sender: 'ai',
+        text: "Xin lỗi, Hệ thống đang gặp sự cố kết nối tới máy chủ AI. Bạn vui lòng thử lại sau.",
+        timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        senderName: 'Trợ lý Y tế',
+        type: 'text',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (inputText.trim() && !isLoading) {
+      const userText = inputText.trim();
       const userMessage: Message = {
-        id: String(messages.length + 1),
+        id: String(Date.now()),
         sender: 'user',
-        text: inputText,
+        text: userText,
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         type: 'text',
       };
-      setMessages([...messages, userMessage]);
-
-      // Simulate response
-      setTimeout(() => {
-        const responseMessage: Message = {
-          id: String(messages.length + 2),
-          sender: consultationType === 'ai' ? 'ai' : 'doctor',
-          text: consultationType === 'ai'
-            ? 'Tôi hiểu rồi. Dựa trên triệu chứng bạn mô tả, tôi khuyên bạn nên uống nước ấm, nghỉ ngơi đầy đủ, và theo dõi tình trạng. Nếu triệu chứng không cải thiện trong 3 ngày, hãy gặp bác sĩ.'
-            : 'Xin chào, tôi là Dr. Nguyễn Văn A, chuyên khoa Nội tổng quát. Tôi sẽ giúp bạn. Bạn có thể mô tả chi tiết hơn về triệu chứng không?',
-          timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-          senderName: consultationType === 'ai' ? 'HealthCare AI' : 'Dr. Nguyễn Văn A',
-          type: 'text',
-        };
-        setMessages((prev) => [...prev, responseMessage]);
-      }, 500);
-
+      setMessages(prev => [...prev, userMessage]);
       setInputText('');
+      setIsLoading(true);
+      await callAI(userText);
     }
   };
 
@@ -77,29 +159,20 @@ export default function Consultation() {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const imageData = event.target?.result as string;
         const userMessage: Message = {
-          id: String(messages.length + 1),
+          id: String(Date.now()),
           sender: 'user',
           image: imageData,
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           type: 'image',
         };
-        setMessages([...messages, userMessage]);
-
-        // Simulate response
-        setTimeout(() => {
-          const responseMessage: Message = {
-            id: String(messages.length + 2),
-            sender: consultationType === 'ai' ? 'ai' : 'doctor',
-            text: 'Tôi đã nhận được hình ảnh của bạn. Dựa trên hình ảnh này, tôi có thể thấy... Bạn có thể mô tả thêm về triệu chứng không?',
-            timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-            senderName: consultationType === 'ai' ? 'HealthCare AI' : 'Dr. Nguyễn Văn A',
-            type: 'text',
-          };
-          setMessages((prev) => [...prev, responseMessage]);
-        }, 500);
+        setMessages(prev => [...prev, userMessage]);
+        
+        setIsLoading(true);
+        // Prompt mặc định khi gửi ảnh
+        await callAI("Hãy phân tích hình ảnh này và cho tôi biết triệu chứng hoặc lời khuyên.", imageData);
       };
       reader.readAsDataURL(file);
     }
@@ -120,31 +193,21 @@ export default function Consultation() {
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         const audioUrl = URL.createObjectURL(audioBlob);
 
         const userMessage: Message = {
-          id: String(messages.length + 1),
+          id: String(Date.now()),
           sender: 'user',
           audio: audioUrl,
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           type: 'audio',
         };
-        setMessages([...messages, userMessage]);
+        setMessages(prev => [...prev, userMessage]);
 
-        // Simulate response
-        setTimeout(() => {
-          const responseMessage: Message = {
-            id: String(messages.length + 2),
-            sender: consultationType === 'ai' ? 'ai' : 'doctor',
-            text: 'Tôi đã nghe tin nhắn giọng nói của bạn. Dựa trên những gì bạn nói, tôi có thể giúp bạn... Bạn cần tư vấn gì thêm?',
-            timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-            senderName: consultationType === 'ai' ? 'HealthCare AI' : 'Dr. Nguyễn Văn A',
-            type: 'text',
-          };
-          setMessages((prev) => [...prev, responseMessage]);
-        }, 500);
+        setIsLoading(true);
+        await callAI("Tôi vừa gửi tin nhắn bằng giọng nói (Demo). Hãy cho lời khuyên thông qua giả định.");
 
         stream.getTracks().forEach((track) => track.stop());
       };
@@ -157,7 +220,6 @@ export default function Consultation() {
       const interval = setInterval(() => {
         setRecordingTime((prev) => {
           if (prev >= 120) {
-            // Max 2 minutes
             mediaRecorder.stop();
             setIsRecording(false);
             clearInterval(interval);
@@ -180,8 +242,18 @@ export default function Consultation() {
     }
   };
 
-  const handleSuggestion = (suggestion: string) => {
-    setInputText(suggestion);
+  const handleSuggestion = async (suggestion: string) => {
+    if (isLoading) return;
+    const userMessage: Message = {
+      id: String(Date.now()),
+      sender: 'user',
+      text: suggestion,
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      type: 'text',
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    await callAI(suggestion);
   };
 
   const formatTime = (seconds: number) => {
@@ -191,9 +263,9 @@ export default function Consultation() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-24 animate-fade-in">
+    <div className="min-h-screen bg-background flex flex-col pb-24 animate-fade-in relative">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-white animate-slide-in-down">
+      <div className="flex items-center justify-between p-4 glass animate-slide-in-down z-10 sticky top-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/home')}
@@ -203,17 +275,17 @@ export default function Consultation() {
           </button>
           <div>
             <h1 className="text-title-md text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Tư vấn sức khỏe
+              Tư vấn Sức khỏe
             </h1>
             <p className="text-body-sm text-muted-foreground">
-              {consultationType === 'ai' ? 'HealthCare AI' : 'Bác sĩ'}
+              {consultationType === 'ai' ? 'Trợ lý AI' : 'Bác sĩ chuyên khoa'}
             </p>
           </div>
         </div>
       </div>
 
       {/* Consultation Type Selector */}
-      <div className="flex gap-2 p-4 border-b border-border bg-white">
+      <div className="flex gap-2 px-4 py-2 bg-white/50 backdrop-blur-md z-10 sticky top-[72px]">
         <button
           onClick={() => setConsultationType('ai')}
           className={`flex-1 py-2 px-3 rounded-lg font-medium transition-smooth ${
@@ -236,12 +308,12 @@ export default function Consultation() {
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+      {/* Messages - Added pb-32 to fix scroll occlusion with overlay input */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+            className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''} animate-slide-in-up`}
           >
             <div className="text-2xl">
               {msg.sender === 'user' ? '👤' : msg.sender === 'ai' ? '🤖' : '👨‍⚕️'}
@@ -251,16 +323,16 @@ export default function Consultation() {
                 <p className="text-body-sm text-muted-foreground mb-1">{msg.senderName}</p>
               )}
               <div
-                className={`rounded-2xl px-4 py-3 max-w-xs ${
+                className={`rounded-2xl px-4 py-3 max-w-sm overflow-hidden shadow-sm ${
                   msg.sender === 'user'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-accent/10 border border-accent/30 text-foreground'
+                    : 'bg-white border border-border text-foreground'
                 }`}
               >
-                {msg.type === 'text' && <p className="text-body-md">{msg.text}</p>}
+                {msg.type === 'text' && <p className="text-body-md whitespace-pre-wrap">{msg.text}</p>}
                 {msg.type === 'image' && (
-                  <div className="rounded-lg overflow-hidden">
-                    <img src={msg.image} alt="Uploaded" className="max-w-xs h-auto" />
+                  <div className="rounded-lg overflow-hidden bg-muted">
+                    <img src={msg.image} alt="Uploaded" className="max-w-full h-auto object-contain" style={{ maxHeight: '200px' }} />
                   </div>
                 )}
                 {msg.type === 'audio' && (
@@ -268,7 +340,6 @@ export default function Consultation() {
                     <Mic size={18} />
                     <audio controls className="h-8 max-w-xs">
                       <source src={msg.audio} type="audio/wav" />
-                      Your browser does not support the audio element.
                     </audio>
                   </div>
                 )}
@@ -277,11 +348,26 @@ export default function Consultation() {
             </div>
           </div>
         ))}
+
+        {isLoading && (
+          <div className="flex gap-3 animate-slide-in-up">
+            <div className="text-2xl">{consultationType === 'doctor' ? '👨‍⚕️' : '🤖'}</div>
+            <div className="flex flex-col items-start">
+               <p className="text-body-sm text-muted-foreground mb-1">
+                 {consultationType === 'doctor' ? 'Dr. Nguyễn Văn A' : 'HealthCare AI'}
+               </p>
+               <div className="rounded-2xl px-4 py-3 bg-accent/10 border border-accent/30 flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="text-body-md text-muted-foreground">Đang xử lý...</span>
+               </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Suggestions */}
       {messages.length <= 1 && (
-        <div className="px-4 py-4 border-t border-border bg-white animate-slide-in-up" style={{ animationDelay: '0.15s' }}>
+        <div className="px-4 py-4 border-t border-border bg-white">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb size={18} className="text-secondary" />
             <p className="text-body-sm font-medium text-foreground">Gợi ý:</p>
@@ -290,8 +376,9 @@ export default function Consultation() {
             {suggestions.map((suggestion, idx) => (
               <button
                 key={idx}
+                disabled={isLoading}
                 onClick={() => handleSuggestion(suggestion)}
-                className="px-3 py-2 bg-primary/10 border border-primary/30 rounded-full text-body-sm text-foreground hover:bg-primary/20 transition-colors"
+                className="px-3 py-2 bg-primary/10 border border-primary/30 rounded-full text-body-sm text-foreground hover:bg-primary/20 transition-colors disabled:opacity-50"
               >
                 {suggestion}
               </button>
@@ -301,7 +388,7 @@ export default function Consultation() {
       )}
 
       {/* Input Area */}
-      <div className="fixed bottom-20 left-0 right-0 bg-white border-t border-border p-4 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+      <div className="fixed bottom-24 left-4 right-4 glass rounded-3xl p-2 z-20 mb-2 shadow-lg">
         {isRecording ? (
           // Recording UI
           <div className="flex items-center justify-between gap-2">
@@ -323,8 +410,9 @@ export default function Consultation() {
           <div className="flex items-center gap-2">
             {/* Image Upload */}
             <button
+              disabled={isLoading}
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 hover:bg-muted rounded-lg transition-smooth active:scale-95"
+              className="p-2 hover:bg-muted rounded-lg transition-smooth active:scale-95 disabled:opacity-50"
               title="Upload ảnh"
             >
               <ImageIcon size={20} className="text-primary" />
@@ -339,8 +427,9 @@ export default function Consultation() {
 
             {/* Voice Recording */}
             <button
+              disabled={isLoading}
               onClick={startRecording}
-              className="p-2 hover:bg-muted rounded-lg transition-smooth active:scale-95"
+              className="p-2 hover:bg-muted rounded-lg transition-smooth active:scale-95 disabled:opacity-50"
               title="Ghi âm"
             >
               <Mic size={20} className="text-primary" />
@@ -349,19 +438,21 @@ export default function Consultation() {
             {/* Text Input */}
             <Input
               type="text"
-              placeholder="Mô tả triệu chứng của bạn..."
+              disabled={isLoading}
+              placeholder={isLoading ? "Đang xử lý..." : (consultationType === 'doctor' ? "Nhắn bác sĩ..." : "Hỏi trợ lý bệnh lý...")}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 bg-muted border-0 rounded-full h-10"
+              className="flex-1 bg-white/60 border-0 rounded-full h-10 px-4"
             />
 
             {/* Send Button */}
             <button
+              disabled={isLoading || !inputText.trim()}
               onClick={handleSend}
-              className="p-2 hover:bg-primary/10 rounded-lg transition-smooth active:scale-95"
+              className="w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-smooth active:scale-95 disabled:opacity-50 shadow-md mr-1"
             >
-              <Send size={20} className="text-primary" />
+              <Send size={18} />
             </button>
           </div>
         )}

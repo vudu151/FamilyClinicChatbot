@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "schema_version": "1.1.0",
+    "awf_version": "3.3.0"
+  },
+  "project": {
+    "name": "FamilyClinicChatbot",
+    "type": "Healthcare AI SaaS (Prototype)",
+    "status": "MVP Beta"
+  },
+  "tech_stack": {
+    "frontend": {
+      "framework": "React (Vite)",
+      "routing": "Wouter",
+      "styling": "TailwindCSS (Teal/Azure Glassmorphism)",
+      "icons": "Lucide React"
+    },
+    "backend": {
+      "framework": "Node.js (Express)",
+      "ai": "@google/genai (Gemini 2.5 Flash)",
+      "builder": "ESBuild"
+    }
+  },
+  "database_schema": {
+    "summary": "Phiên bản Prototype hiện tại không có Database. Dữ liệu tin nhắn lưu cục bộ trên State của Component.",
+    "tables": [],
+    "relationships": []
+  },
+  "api_endpoints": [
+    {
+      "path": "/api/chat",
+      "explained": "Khởi tạo cuộc hội thoại AI. Nhận Prompt và Image Base64 để trả về lời khuyên y tế."
+    }
+  ],
+  "business_rules": [
+    "AI luôn đóng vai trò 'Trợ lý AI Phòng Khám Gia Đình'.",
+    "Trợ lý AI luôn đưa ra cảnh báo khuyên người dùng nên tới gặp bác sĩ, nó không tự đưa ra chuẩn đoán khẳng định 100%."
+  ],
+  "features": [
+    "Tư vấn văn bản tự nhiên (Text Chat)",
+    "Tư vấn đa phương thức (Vision/Image Upload)",
+    "Hệ thống định tuyến thông minh từ Trang chủ (Quick Prompts)"
+  ]
+}

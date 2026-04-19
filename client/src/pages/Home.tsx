@@ -1,143 +1,142 @@
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { Bell, Settings, MapPin, Clock, Heart, Pill, FileText, Shield, MessageSquare, AlertCircle } from 'lucide-react';
+import { Bell, Settings, Search, Camera, Calendar, Clock, Stethoscope, MessageSquare } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useState } from 'react';
 
 export default function Home() {
   const [, navigate] = useLocation();
+  const [query, setQuery] = useState('');
 
-  const mainFeatures = [
-    { icon: '👨‍⚕️', label: 'Tìm bác sĩ', action: '/doctors' },
-    { icon: '🍽️', label: 'Ăn gì hôm nay', action: '#' },
-    { icon: '🏥', label: 'Phòng khám gần', action: '#' },
-    { icon: '📅', label: 'Đặt lịch khám', action: '#' },
+  const quickPrompts = [
+    { icon: <Stethoscope size={20} className="text-primary" />, label: 'Kiểm tra triệu chứng', query: 'Tôi có một vài triệu chứng cần kiểm tra.' },
+    { icon: <Camera size={20} className="text-primary" />, label: 'Chẩn đoán hình ảnh', action: '/consultation?tab=image' },
+    { icon: <Calendar size={20} className="text-primary" />, label: 'Đặt lịch khám', action: '/consultation?q=Tôi+muốn+đặt+lịch+khám' },
+    { icon: <Clock size={20} className="text-primary" />, label: 'Hỏi về đơn thuốc', query: 'Hướng dẫn cho tôi cách sử dụng đơn thuốc này.' },
   ];
 
-  const secondaryFeatures = [
-    { icon: <Clock size={24} />, label: 'Lịch sử khám', action: '/health' },
-    { icon: <MessageSquare size={24} />, label: 'Tư vấn', action: '/consultation' },
-    { icon: <Shield size={24} />, label: 'Bảo hiểm', action: '#' },
-  ];
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (query.trim()) {
+      navigate(`/consultation?q=${encodeURIComponent(query)}`);
+    } else {
+      navigate('/consultation');
+    }
+  };
+
+  const handlePromptClick = (prompt: any) => {
+    if (prompt.action) {
+      navigate(prompt.action);
+    } else if (prompt.query) {
+      navigate(`/consultation?q=${encodeURIComponent(prompt.query)}`);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-24 animate-fade-in">
+    <div className="min-h-screen bg-background flex flex-col pb-24 animate-fade-in font-sans relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+      <div className="absolute top-40 left-0 w-48 h-48 bg-accent/20 rounded-full blur-3xl -ml-20"></div>
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-4 pt-4 pb-6 animate-slide-in-down">
-        <div className="flex items-center justify-between mb-4">
+      <div className="px-4 pt-8 pb-4 relative z-10 animate-slide-in-down">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl">
-              👤
+            <div className="w-12 h-12 bg-white shadow-sm border border-border rounded-full flex items-center justify-center text-2xl overflow-hidden">
+               <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-body-sm opacity-90">Xin chào</p>
-              <p className="text-title-sm font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Nguyễn Văn A
-              </p>
+              <p className="text-body-sm text-muted-foreground font-medium">Chào buổi sáng,</p>
+              <p className="text-title-sm font-bold text-foreground">Nguyễn Văn A</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-              <Bell size={20} />
+          <div className="flex items-center gap-3">
+            <button className="relative p-2 bg-white rounded-full shadow-sm border border-border hover:bg-muted transition-colors">
+              <Bell size={20} className="text-foreground" />
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-white"></span>
             </button>
             <button
               onClick={() => navigate('/profile')}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 bg-white rounded-full shadow-sm border border-border hover:bg-muted transition-colors"
             >
-              <Settings size={20} />
+              <Settings size={20} className="text-foreground" />
             </button>
           </div>
         </div>
 
-        {/* Notification Banner */}
-        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 flex items-start gap-2">
-          <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-body-sm font-medium">Kết quả khám gần đây</p>
-            <p className="text-body-sm opacity-90">Xem kết quả khám từ 15/03/2026</p>
-          </div>
+        {/* AI Greeting Message */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">
+            Trợ lý Y tế <br/> <span className="text-primary">Gia đình</span>
+          </h1>
+          <p className="text-body-md text-muted-foreground">
+            Hôm nay bạn thấy trong người thế nào? Hãy nói cho tôi biết triệu chứng của bạn.
+          </p>
         </div>
+
+        {/* Global Search / Chat Input Trigger */}
+        <form onSubmit={handleSearch} className="relative glass rounded-2xl shadow-sm p-1 flex items-center">
+          <div className="pl-3 py-3">
+             <Search size={20} className="text-muted-foreground" />
+          </div>
+          <Input 
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Mô tả triệu chứng của bạn..." 
+            className="border-0 bg-transparent shadow-none focus-visible:ring-0 text-body-md h-12"
+          />
+          <Button 
+            type="submit"
+            className="rounded-xl h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-medium mr-1"
+          >
+            Hỏi AI
+          </Button>
+        </form>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
-        {/* Main Features Grid (4 items) */}
-        <div className="grid grid-cols-4 gap-3">
-          {mainFeatures.map((feature, idx) => (
-            <button
-              key={idx}
-              onClick={() => feature.action !== '#' && navigate(feature.action)}
-              className="flex flex-col items-center gap-2 p-3 bg-white border border-border rounded-lg hover:shadow-card transition-all duration-300 active:scale-95"
-            >
-              <div className="text-3xl">{feature.icon}</div>
-              <p className="text-body-xs text-foreground text-center font-medium leading-tight">
-                {feature.label}
-              </p>
-            </button>
-          ))}
+      <div className="flex-1 px-4 py-2 relative z-10 space-y-6">
+        
+        {/* Quick Prompts */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+           <h2 className="text-title-sm font-bold mb-3 flex items-center gap-2">
+              <MessageSquare size={18} className="text-primary"/> Gợi ý nhanh
+           </h2>
+           <div className="grid grid-cols-2 gap-3">
+             {quickPrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handlePromptClick(prompt)}
+                  className="bg-white border border-border rounded-2xl p-4 flex flex-col gap-3 hover:border-primary/50 hover:shadow-card transition-all text-left active:scale-95 group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                     {prompt.icon}
+                  </div>
+                  <span className="text-body-sm font-medium text-foreground leading-tight">
+                    {prompt.label}
+                  </span>
+                </button>
+             ))}
+           </div>
         </div>
 
-        {/* Hero Banner Image */}
-        <div className="relative rounded-lg overflow-hidden shadow-card animate-slide-in-up" style={{ animationDelay: '0.15s' }}>
-          <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-4xl mb-2">🏥</p>
-              <p className="text-title-sm font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Tìm bác sĩ gần nhất
-              </p>
-              <p className="text-body-sm text-muted-foreground mt-1">
-                Kết nối với các chuyên gia y tế
-              </p>
-            </div>
+        {/* Summary Card */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="glass rounded-3xl p-5 border border-white/60 relative overflow-hidden">
+             <div className="relative z-10 flex justify-between items-center">
+                <div>
+                   <p className="text-body-sm font-medium text-muted-foreground mb-1">Cập nhật sức khỏe</p>
+                   <p className="text-title-md font-bold text-foreground">Bạn rất khỏe mạnh!</p>
+                   <p className="text-body-xs text-muted-foreground mt-1">Lần khám cuối: 15/03/2026</p>
+                </div>
+                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-primary rounded-full flex items-center justify-center text-white shadow-lg">
+                   <Heart size={28} className="fill-white" />
+                </div>
+             </div>
           </div>
         </div>
 
-        {/* Secondary Features Grid (3 items) */}
-        <div>
-          <p className="text-title-sm text-foreground mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
-            Dịch vụ khác
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            {secondaryFeatures.map((feature, idx) => (
-              <button
-                key={idx}
-                onClick={() => feature.action !== '#' && navigate(feature.action)}
-                className="flex flex-col items-center gap-2 p-3 bg-white border border-border rounded-lg hover:shadow-card transition-all duration-300 active:scale-95"
-              >
-                <div className="text-primary">{feature.icon}</div>
-                <p className="text-body-xs text-foreground text-center font-medium leading-tight">
-                  {feature.label}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-3 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
-            <p className="text-body-sm text-muted-foreground mb-2">Lần khám cuối</p>
-            <p className="text-title-sm text-foreground font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              15/03/2026
-            </p>
-          </div>
-          <div className="bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 rounded-lg p-4">
-            <p className="text-body-sm text-muted-foreground mb-2">Trạng thái sức khỏe</p>
-            <p className="text-title-sm text-accent font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              Bình thường
-            </p>
-          </div>
-        </div>
-
-        {/* Emergency Button */}
-        <div className="animate-slide-in-up" style={{ animationDelay: '0.25s' }}>
-          <Button
-            onClick={() => navigate('/emergency')}
-            className="w-full bg-gradient-to-r from-secondary to-secondary/80 text-secondary-foreground hover:shadow-lg font-bold rounded-lg h-12 flex items-center justify-center gap-2 transition-smooth active:scale-95"
-          >
-            <AlertCircle size={20} />
-            🚨 Gọi Cấp Cứu
-          </Button>
-        </div>
       </div>
 
       {/* Bottom Navigation */}
