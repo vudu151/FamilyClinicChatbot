@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { Bell, Settings, Search, Camera, Calendar, Clock, Stethoscope, MessageSquare } from 'lucide-react';
+import { Bell, Settings, Search, Camera, Calendar, Clock, Stethoscope, MessageSquare, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
