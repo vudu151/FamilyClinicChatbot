@@ -1,13 +1,30 @@
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { Bell, Settings, Search, Camera, Calendar, Clock, Stethoscope, MessageSquare, Heart } from 'lucide-react';
+import { Bell, Settings, Search, Camera, Calendar, Clock, Stethoscope, MessageSquare, Heart, Clock3 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState('');
+  const [history, setHistory] = useState<any[]>([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Load lịch sử hội thoại
+    fetch('/api/chat', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.conversations) setHistory(data.conversations);
+    })
+    .catch(console.error);
+  }, []);
 
   const quickPrompts = [
     { icon: <Stethoscope size={20} className="text-primary" />, label: 'Kiểm tra triệu chứng', query: 'Tôi có một vài triệu chứng cần kiểm tra.' },
@@ -35,26 +52,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-24 animate-fade-in font-sans relative overflow-hidden">
-      {/* Background Decor */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
       <div className="absolute top-40 left-0 w-48 h-48 bg-accent/20 rounded-full blur-3xl -ml-20"></div>
 
-      {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10 animate-slide-in-down">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white shadow-sm border border-border rounded-full flex items-center justify-center text-2xl overflow-hidden">
-               <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Avatar" className="w-full h-full object-cover" />
+               <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="text-body-sm text-muted-foreground font-medium">Chào buổi sáng,</p>
-              <p className="text-title-sm font-bold text-foreground">Nguyễn Văn A</p>
+              <p className="text-title-sm font-bold text-foreground">{user?.name || 'Bạn'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button className="relative p-2 bg-white rounded-full shadow-sm border border-border hover:bg-muted transition-colors">
               <Bell size={20} className="text-foreground" />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-white"></span>
             </button>
             <button
               onClick={() => navigate('/profile')}
@@ -65,7 +79,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* AI Greeting Message */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">
             Trợ lý Y tế <br/> <span className="text-primary">Gia đình</span>
@@ -75,7 +88,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Global Search / Chat Input Trigger */}
         <form onSubmit={handleSearch} className="relative glass rounded-2xl shadow-sm p-1 flex items-center">
           <div className="pl-3 py-3">
              <Search size={20} className="text-muted-foreground" />
@@ -95,10 +107,7 @@ export default function Home() {
         </form>
       </div>
 
-      {/* Content */}
       <div className="flex-1 px-4 py-2 relative z-10 space-y-6">
-        
-        {/* Quick Prompts */}
         <div className="animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
            <h2 className="text-title-sm font-bold mb-3 flex items-center gap-2">
               <MessageSquare size={18} className="text-primary"/> Gợi ý nhanh
@@ -121,26 +130,42 @@ export default function Home() {
            </div>
         </div>
 
-        {/* Summary Card */}
-        <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="glass rounded-3xl p-5 border border-white/60 relative overflow-hidden">
-             <div className="relative z-10 flex justify-between items-center">
-                <div>
-                   <p className="text-body-sm font-medium text-muted-foreground mb-1">Cập nhật sức khỏe</p>
-                   <p className="text-title-md font-bold text-foreground">Bạn rất khỏe mạnh!</p>
-                   <p className="text-body-xs text-muted-foreground mt-1">Lần khám cuối: 15/03/2026</p>
-                </div>
-                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-primary rounded-full flex items-center justify-center text-white shadow-lg">
-                   <Heart size={28} className="fill-white" />
-                </div>
+        {history.length > 0 && (
+          <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+             <h2 className="text-title-sm font-bold mb-3 flex items-center gap-2">
+                <Clock3 size={18} className="text-primary"/> Lịch sử tư vấn gần đây
+             </h2>
+             <div className="space-y-3">
+               {history.slice(0, 3).map((conv) => (
+                  <button
+                    key={conv.id}
+                    onClick={() => navigate(`/consultation?cid=${conv.id}`)}
+                    className="w-full glass border border-white/60 rounded-2xl p-4 flex items-center justify-between active:scale-95 transition-smooth"
+                  >
+                     <div className="text-left">
+                        <p className="font-medium text-foreground truncate max-w-[200px]">{conv.title}</p>
+                        <p className="text-body-xs text-muted-foreground mt-1">
+                           {new Date(conv.updatedAt).toLocaleDateString()}
+                        </p>
+                     </div>
+                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <ChevronRight className="w-4 h-4 text-primary" />
+                     </div>
+                  </button>
+               ))}
              </div>
           </div>
-        </div>
-
+        )}
       </div>
-
-      {/* Bottom Navigation */}
       <BottomNav />
     </div>
+  );
+}
+
+function ChevronRight(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18l6-6-6-6" />
+    </svg>
   );
 }

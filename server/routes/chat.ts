@@ -1,5 +1,10 @@
 import { Router } from "express";
 import { GoogleGenAI } from "@google/genai";
+import { nanoid } from "nanoid";
+import { db } from "../db/index.js";
+import { conversations, messages } from "../db/schema.js";
+import { eq, desc } from "drizzle-orm";
+import { authenticateToken, AuthRequest } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -13,55 +18,108 @@ Vai trò của bạn là:
 5. Nếu người bệnh gửi hình ảnh, hãy phân tích hình ảnh (ví dụ: vết thương, đơn thuốc) và đưa ra đánh giá sơ bộ nhưng luôn kèm cảnh báo y khoa.
 `;
 
-router.post("/", async (req, res) => {
+// Lấy danh sách các cuộc hội thoại của user
+router.get("/", authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { text, imageBase64, history = [] } = req.body;
+    const userId = req.user!.userId;
+    const userConversations = await db.select().from(conversations).where(eq(conversations.userId, userId)).orderBy(desc(conversations.createdAt));
+    return res.json({ conversations: userConversations });
+  } catch (err: any) {
+    return res.status(500).json({ error: "Lỗi lấy danh sách hội thoại" });
+  }
+});
+
+// Lấy chi tiết lịch sử tin nhắn của một hội thoại
+router.get("/:id/messages", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const conversationId = req.params.id;
+    const userId = req.user!.userId;
+
+    // Check ownership
+    const conv = await db.select().from(conversations).where(eq(conversations.id, conversationId));
+    if (conv.length === 0 || conv[0].userId !== userId) {
+      return res.status(404).json({ error: "Hội thoại không tồn tại" });
+    }
+
+    const msgs = await db.select().from(messages).where(eq(messages.conversationId, conversationId)).orderBy(messages.createdAt);
+    return res.json({ messages: msgs });
+  } catch (err: any) {
+    return res.status(500).json({ error: "Lỗi lấy chi tiết tin nhắn" });
+  }
+});
+
+router.post("/", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.userId;
+    let { text, imageBase64, conversationId } = req.body;
 
     if (!text && !imageBase64) {
       return res.status(400).json({ error: "Yêu cầu phải có text hoặc imageBase64" });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") {
-      // Fallback cho chế độ Mock nếu chưa có API Key
-      console.log("No valid Gemini API key found, using mock response...");
-      setTimeout(() => {
-        return res.json({
-          response: "[Chế độ Dùng Thử - Chưa cấu hình API Key]\nXin chào, hệ thống nhận thấy bạn có triệu chứng cần lưu ý. Vui lòng nghỉ ngơi và uống nhiều nước. Để AI hoạt động thật, vui lòng cấu hình GEMINI_API_KEY."
-        });
-      }, 1500);
-      return;
+    // Nếu chưa có conversationId, tạo mới
+    if (!conversationId) {
+      conversationId = nanoid();
+      await db.insert(conversations).values({
+        id: conversationId,
+        userId: userId,
+        title: text ? text.substring(0, 30) + "..." : "Image Analysis",
+      });
     }
 
-    // Khởi tạo SDK
-    const ai = new GoogleGenAI({ apiKey });
+    // Lưu tin nhắn của User
+    await db.insert(messages).values({
+      id: nanoid(),
+      conversationId,
+      role: 'user',
+      content: text ? text : "[Hình ảnh đính kèm]",
+    });
 
-    // Build current user message parts
-    const currentMessageParts: any[] = [];
+    // Lấy history quá khứ từ DB
+    const historyMsgs = await db.select().from(messages).where(eq(messages.conversationId, conversationId)).orderBy(messages.createdAt);
     
-    if (text) {
-      currentMessageParts.push({ text: text });
-    }
-
-    if (imageBase64) {
-      // Tách mimetype và base64 data từ chuỗi DataURL (e.g. data:image/jpeg;base64,... )
-      const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        currentMessageParts.push({
-          inlineData: {
-            mimeType: matches[1],
-            data: matches[2]
-          }
+    // Convert cho Gemini: Gộp các tin nhắn có cùng role liền kề để tránh lỗi 400 Bad Request của Gemini
+    const rawHistory = historyMsgs.slice(0, historyMsgs.length - 1);
+    const history: any[] = [];
+    
+    for (const msg of rawHistory) {
+      const mappedRole = msg.role === 'model' ? 'model' : 'user';
+      if (history.length > 0 && history[history.length - 1].role === mappedRole) {
+        history[history.length - 1].parts[0].text += `\n${msg.content}`;
+      } else {
+        history.push({
+          role: mappedRole,
+          parts: [{ text: msg.content }]
         });
       }
     }
 
-    const currentContent = {
-      role: 'user',
-      parts: currentMessageParts
-    };
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") {
+       const mockResp = "[Chế độ Dùng Thử - Cần API Key] Lời khuyên mock.";
+       await db.insert(messages).values({
+          id: nanoid(),
+          conversationId,
+          role: 'model',
+          content: mockResp,
+       });
+       return res.json({ response: mockResp, conversationId });
+    }
 
-    // Gọi Gemini API
+    const ai = new GoogleGenAI({ apiKey });
+    const currentMessageParts: any[] = [];
+    
+    if (text) currentMessageParts.push({ text });
+
+    if (imageBase64) {
+      const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        currentMessageParts.push({ inlineData: { mimeType: matches[1], data: matches[2] } });
+      }
+    }
+
+    const currentContent = { role: 'user', parts: currentMessageParts };
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [...history, currentContent],
@@ -73,10 +131,27 @@ router.post("/", async (req, res) => {
 
     const aiText = response.text || "Xin lỗi, tôi không thể xử lý yêu cầu lúc này.";
     
-    return res.json({ response: aiText });
+    // Lưu tin nhắn của AI
+    await db.insert(messages).values({
+      id: nanoid(),
+      conversationId,
+      role: 'model',
+      content: aiText,
+    });
+
+    // Cập nhật updatedAt của config
+    await db.update(conversations)
+      .set({ updatedAt: new Date().toISOString() })
+      .where(eq(conversations.id, conversationId));
+
+    return res.json({ response: aiText, conversationId });
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    return res.status(500).json({ error: error.message || "Lỗi xử lý từ AI" });
+    console.error("AI Error:", error);
+    let errMsg = error.message || "Lỗi xử lý từ AI";
+    if (errMsg.toLowerCase().includes("quota") || error?.status === 429) {
+      errMsg = "Hệ thống AI đang quá tải hoặc bạn đã dùng hết hạn mức miễn phí (Quota Exceeded). Vui lòng chờ vài giây rồi thử lại!";
+    }
+    return res.status(500).json({ error: errMsg });
   }
 });
 

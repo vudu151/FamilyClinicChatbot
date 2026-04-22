@@ -4,6 +4,7 @@ import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
 import { ChevronLeft, Send, Lightbulb, MessageCircle, Mic, Image as ImageIcon, Square, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Message {
   id: string;
@@ -14,6 +15,7 @@ interface Message {
   timestamp: string;
   senderName?: string;
   type: 'text' | 'image' | 'audio';
+  target: 'ai' | 'doctor';
 }
 
 const suggestions = [
@@ -33,6 +35,16 @@ export default function Consultation() {
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       senderName: 'Trợ lý Y tế',
       type: 'text',
+      target: 'ai',
+    },
+    {
+      id: '2',
+      sender: 'doctor',
+      text: 'Xin chào! Tôi là Bác sĩ chuyên khoa. Cảm ơn bạn đã liên hệ, tôi có thể giúp gì cho bạn hôm nay?',
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      senderName: 'Bác sĩ',
+      type: 'text',
+      target: 'doctor',
     },
   ]);
   const [inputText, setInputText] = useState('');
@@ -44,6 +56,8 @@ export default function Consultation() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const hasInitialized = useRef(false);
+  const { token } = useAuth();
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -53,20 +67,29 @@ export default function Consultation() {
       const params = new URLSearchParams(window.location.search);
       const q = params.get('q');
       const tab = params.get('tab');
+      const cid = params.get('cid');
       
-      if (q) {
-        // Auto trigger text query
-        setIsLoading(true);
-        setInputText(''); // ensure it's empty
-        const userMessage: Message = {
-          id: String(Date.now()),
-          sender: 'user',
-          text: q,
-          timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-          type: 'text',
-        };
-        setMessages((prev) => [...prev, userMessage]);
-        callAI(q);
+      if (cid) {
+        setConversationId(cid);
+        fetch(`/api/chat/${cid}/messages`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.messages && data.messages.length > 0) {
+            setMessages(data.messages.map((m: any) => ({
+              id: m.id,
+              sender: m.role === 'user' ? 'user' : 'ai',
+              text: m.content,
+              timestamp: new Date(m.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+              type: m.content.startsWith('[Hình') ? 'image' : 'text',
+              target: 'ai'
+            })));
+          }
+        });
+      } else if (q) {
+        // Điền sẵn câu hỏi vào ô input thay vì tự động gửi
+        setInputText(q);
       } else if (tab === 'image') {
         // Just trigger the file input click after a short delay
         setTimeout(() => {
@@ -86,6 +109,7 @@ export default function Consultation() {
            timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
            senderName: 'Dr. Nguyễn Văn A',
            type: 'text',
+           target: 'doctor',
         };
         setMessages((prev) => [...prev, docMsg]);
         setIsLoading(false);
@@ -107,19 +131,29 @@ export default function Consultation() {
 
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, imageBase64, history }),
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token || localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ text, imageBase64, history, conversationId }),
       });
       
       const data = await res.json();
       
+      if (!res.ok) {
+        throw new Error(data.error || "Lỗi xử lý từ máy chủ.");
+      }
+
+      if (data.conversationId) setConversationId(data.conversationId);
+      
       const aiMessage: Message = {
         id: String(Date.now()),
         sender: 'ai',
-        text: data.response || "Lỗi xử lý từ máy chủ.",
+        text: data.response,
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         senderName: 'Trợ lý Y tế',
         type: 'text',
+        target: 'ai',
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
@@ -127,10 +161,11 @@ export default function Consultation() {
       const errorMessage: Message = {
         id: String(Date.now()),
         sender: 'ai',
-        text: "Xin lỗi, Hệ thống đang gặp sự cố kết nối tới máy chủ AI. Bạn vui lòng thử lại sau.",
+        text: (error as any).message || "Xin lỗi, Hệ thống đang gặp sự cố kết nối tới máy chủ AI. Bạn vui lòng thử lại sau.",
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         senderName: 'Trợ lý Y tế',
         type: 'text',
+        target: 'ai',
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -147,6 +182,7 @@ export default function Consultation() {
         text: userText,
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         type: 'text',
+        target: consultationType,
       };
       setMessages(prev => [...prev, userMessage]);
       setInputText('');
@@ -167,6 +203,7 @@ export default function Consultation() {
           image: imageData,
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           type: 'image',
+          target: consultationType,
         };
         setMessages(prev => [...prev, userMessage]);
         
@@ -203,6 +240,7 @@ export default function Consultation() {
           audio: audioUrl,
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           type: 'audio',
+          target: consultationType,
         };
         setMessages(prev => [...prev, userMessage]);
 
@@ -250,6 +288,7 @@ export default function Consultation() {
       text: suggestion,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       type: 'text',
+      target: consultationType,
     };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
@@ -310,7 +349,7 @@ export default function Consultation() {
 
       {/* Messages - Added pb-32 to fix scroll occlusion with overlay input */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
-        {messages.map((msg) => (
+        {messages.filter(msg => msg.target === consultationType).map((msg) => (
           <div
             key={msg.id}
             className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''} animate-slide-in-up`}
@@ -366,7 +405,7 @@ export default function Consultation() {
       </div>
 
       {/* Suggestions */}
-      {messages.length <= 1 && (
+      {messages.filter(msg => msg.target === consultationType).length <= 1 && (
         <div className="px-4 py-4 border-t border-border bg-white">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb size={18} className="text-secondary" />

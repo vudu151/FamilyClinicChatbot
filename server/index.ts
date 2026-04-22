@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import chatRouter from "./routes/chat";
+import authRouter from "./routes/auth.js";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
   // API Routes
+  app.use("/api/auth", authRouter);
   app.use("/api/chat", chatRouter);
 
   // Serve static files from dist/public in production
@@ -34,7 +36,7 @@ async function startServer() {
     res.sendFile(path.join(staticPath, "index.html"));
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3300;
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);

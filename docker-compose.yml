@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  family-chatbot:
+    build: .
+    container_name: family_clinic_chatbot
+    ports:
+      - "3300:3300"
+    volumes:
+      # Map thư mục chứa database ra ngoài máy Host để không bị mất dữ liệu khi xóa container
+      - ./sqlite.db:/app/sqlite.db
+    environment:
+      - NODE_ENV=production
+      - PORT=3300
+      # Đặt API Key của bạn tại đây hoặc lấy từ file .env
+    env_file:
+      - .env
+    restart: always

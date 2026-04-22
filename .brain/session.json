@@ -1,45 +1,26 @@
 {
-  "updated_at": "2026-04-19T02:18:00Z",
+  "updated_at": "2026-04-23T02:55:00Z",
   "working_on": {
-    "feature": "Hoàn thiện Prototype Đồ Án",
-    "task": "Tích hợp Gemini AI & UI Redesign",
-    "status": "completed",
-    "files": [],
+    "feature": "Deploy & Bug Fixes",
+    "task": "Tối ưu hóa UI/UX Chatbot và sửa lỗi sập server (Gemini Quota & 400 Bad Request), đóng gói Docker",
+    "status": "done",
+    "files": ["server/routes/chat.ts", "client/src/pages/Consultation.tsx", "Dockerfile", "docker-compose.yml"],
     "blockers": [],
-    "notes": "Hệ thống đã sẵn sàng cho buổi báo cáo."
+    "notes": "Đã chạy thành công trên máy ảo / Docker"
   },
-  "pending_tasks": [],
+  "pending_tasks": [
+    { "task": "Nộp báo cáo đồ án", "priority": "high", "notes": "Chương 5 đã làm xong, 4-5 trang chi tiết kỹ thuật" }
+  ],
   "recent_changes": [
-    {
-      "timestamp": "2026-04-19",
-      "type": "feature",
-      "description": "Tích hợp API Gemini 2.5 cho AI Chatbot",
-      "files": ["server/routes/chat.ts", "server/index.ts"]
-    },
-    {
-      "timestamp": "2026-04-19",
-      "type": "ui",
-      "description": "Đại tu trang Chủ và Tư vấn thành AI Gateway với Glassmorphism Teal",
-      "files": ["client/src/pages/Home.tsx", "client/src/pages/Consultation.tsx", "client/src/index.css", "client/src/components/BottomNav.tsx"]
-    },
-    {
-      "timestamp": "2026-04-19",
-      "type": "docs",
-      "description": "Khởi tạo chi tiết tài liệu Agile Chương 5",
-      "files": ["docs/Chuong5_Agile_Plan.md", "docs/Chuong5_Agile_Plan.docx"]
-    }
+    { "timestamp": "2026-04-23T01:50:00Z", "type": "bugfix", "description": "Sửa lỗi tách biệt tin nhắn tab AI và Bác sĩ", "files": ["Consultation.tsx"] },
+    { "timestamp": "2026-04-23T01:52:00Z", "type": "feature", "description": "Sửa Quick Prompts thành điền sẵn text thay vì gửi auto", "files": ["Consultation.tsx"] },
+    { "timestamp": "2026-04-23T01:56:00Z", "type": "bugfix", "description": "Sửa lỗi Gemini 400 (gộp lịch sử chat) và 429 (báo lỗi Quota)", "files": ["chat.ts", "Consultation.tsx"] },
+    { "timestamp": "2026-04-23T02:00:00Z", "type": "feature", "description": "Viết file cấu hình Docker, docker-compose", "files": ["Dockerfile", "docker-compose.yml", ".dockerignore"] }
   ],
   "errors_encountered": [
-    {
-      "error": "Lỗi ENOSPC (đầy ổ đĩa) khi xuất file docx",
-      "solution": "Chạy npm cache clean --force",
-      "resolved": true
-    }
+    { "error": "Gemini 429 Quota Exceeded & 400 Bad Request", "solution": "Gộp các role giống nhau trong lịch sử chat, chặn try/catch báo lỗi lên Frontend", "resolved": true }
   ],
   "decisions_made": [
-    {
-      "decision": "Lấy Trợ lý AI làm trọng tâm",
-      "reason": "Khớp với chủ đề 'Chatbot phòng khám gia đình' hơn là một app đặt lịch tĩnh."
-    }
+    { "decision": "Dùng Docker Compose", "reason": "Chạy cả frontend và backend + database local một cách dễ dàng và đồng bộ nhất" }
   ]
 }

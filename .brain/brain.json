@@ -1,44 +1,42 @@
 {
-  "meta": {
-    "schema_version": "1.1.0",
-    "awf_version": "3.3.0"
-  },
-  "project": {
-    "name": "FamilyClinicChatbot",
-    "type": "Healthcare AI SaaS (Prototype)",
-    "status": "MVP Beta"
-  },
-  "tech_stack": {
-    "frontend": {
-      "framework": "React (Vite)",
-      "routing": "Wouter",
-      "styling": "TailwindCSS (Teal/Azure Glassmorphism)",
-      "icons": "Lucide React"
-    },
-    "backend": {
-      "framework": "Node.js (Express)",
-      "ai": "@google/genai (Gemini 2.5 Flash)",
-      "builder": "ESBuild"
-    }
+  "meta": { "schema_version": "1.1.0", "awf_version": "3.3.0" },
+  "project": { "name": "FamilyClinicChatbot", "type": "Fullstack Web App", "status": "Ready for Production" },
+  "tech_stack": { 
+    "frontend": {"framework": "React (Vite)", "styling": "TailwindCSS", "ui": "Radix UI / shadcn"}, 
+    "backend": {"framework": "Express.js", "runtime": "Node.js (esbuild bundle)"}, 
+    "database": {"type": "SQLite", "orm": "Drizzle ORM"},
+    "ai": {"provider": "Google Gemini (gemini-2.5-flash)", "sdk": "@google/genai"}
   },
   "database_schema": {
-    "summary": "Phiên bản Prototype hiện tại không có Database. Dữ liệu tin nhắn lưu cục bộ trên State của Component.",
-    "tables": [],
-    "relationships": []
+    "summary": "Lưu trữ thông tin người dùng và lịch sử chat (không lưu đoạn chat với bác sĩ giả lập).",
+    "tables": [
+      {"name": "users", "columns": ["id", "username", "password"]},
+      {"name": "conversations", "columns": ["id", "userId", "title", "createdAt"]},
+      {"name": "messages", "columns": ["id", "conversationId", "role", "content", "createdAt"]}
+    ],
+    "relationships_explained": "1 User có nhiều Conversations. 1 Conversation có nhiều Messages. Conversations được lấy dựa trên userId lưu trong JWT."
   },
   "api_endpoints": [
-    {
-      "path": "/api/chat",
-      "explained": "Khởi tạo cuộc hội thoại AI. Nhận Prompt và Image Base64 để trả về lời khuyên y tế."
-    }
+    {"path": "/api/auth/register", "explained": "Đăng ký tài khoản mới (mã hóa password bằng bcrypt)"},
+    {"path": "/api/auth/login", "explained": "Đăng nhập và cấp phát JWT token"},
+    {"path": "/api/chat", "explained": "Gửi tin nhắn lên Gemini AI, tự tạo conversation mới nếu chưa có, lưu lịch sử chat vào DB (xử lý gộp tin nhắn user để tránh lỗi 400)"},
+    {"path": "/api/chat/history", "explained": "Lấy danh sách các cuộc hội thoại cũ để show ra trang Home"}
   ],
   "business_rules": [
-    "AI luôn đóng vai trò 'Trợ lý AI Phòng Khám Gia Đình'.",
-    "Trợ lý AI luôn đưa ra cảnh báo khuyên người dùng nên tới gặp bác sĩ, nó không tự đưa ra chuẩn đoán khẳng định 100%."
+    "Khách chưa đăng nhập bị đá về trang Auth.",
+    "Chat với 'Trợ lý AI' sẽ gọi API Gemini và lưu DB. Chat với 'Bác sĩ' chỉ là UI demo giả lập (không lưu DB).",
+    "Lỗi Gemini 429 (Hết hạn mức) hoặc 400 (Sai chuỗi lịch sử) phải được bắt và báo rõ cho người dùng thay vì sập ngầm."
   ],
   "features": [
-    "Tư vấn văn bản tự nhiên (Text Chat)",
-    "Tư vấn đa phương thức (Vision/Image Upload)",
-    "Hệ thống định tuyến thông minh từ Trang chủ (Quick Prompts)"
-  ]
+    "Authentication (JWT)",
+    "Hệ thống Chatbot Y tế AI (Google Gemini)",
+    "Chẩn đoán hình ảnh (Upload base64 Image qua AI)",
+    "Quản lý lịch sử tư vấn",
+    "Đóng gói Docker"
+  ],
+  "knowledge_items": { 
+    "patterns": ["Conversational UI: Các hành động như Đặt lịch đều gõ sẵn vào text input thay vì chuyển trang form."], 
+    "gotchas": ["Cần group liên tiếp các tin nhắn role=user lại với nhau trước khi gửi cho Gemini API để tránh lỗi HTTP 400."], 
+    "conventions": ["Lưu database ở `process.cwd()` khi build esbuild."] 
+  }
 }
