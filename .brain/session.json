@@ -15,10 +15,12 @@
     { "timestamp": "2026-04-23T01:50:00Z", "type": "bugfix", "description": "Sửa lỗi tách biệt tin nhắn tab AI và Bác sĩ", "files": ["Consultation.tsx"] },
     { "timestamp": "2026-04-23T01:52:00Z", "type": "feature", "description": "Sửa Quick Prompts thành điền sẵn text thay vì gửi auto", "files": ["Consultation.tsx"] },
     { "timestamp": "2026-04-23T01:56:00Z", "type": "bugfix", "description": "Sửa lỗi Gemini 400 (gộp lịch sử chat) và 429 (báo lỗi Quota)", "files": ["chat.ts", "Consultation.tsx"] },
-    { "timestamp": "2026-04-23T02:00:00Z", "type": "feature", "description": "Viết file cấu hình Docker, docker-compose", "files": ["Dockerfile", "docker-compose.yml", ".dockerignore"] }
+    { "timestamp": "2026-04-23T02:00:00Z", "type": "feature", "description": "Viết file cấu hình Docker, docker-compose", "files": ["Dockerfile", "docker-compose.yml", ".dockerignore"] },
+    { "timestamp": "2026-04-23T18:00:00Z", "type": "bugfix", "description": "Sửa lỗi Docker build do thiếu thư mục patches của thư viện wouter", "files": ["Dockerfile"] }
   ],
   "errors_encountered": [
-    { "error": "Gemini 429 Quota Exceeded & 400 Bad Request", "solution": "Gộp các role giống nhau trong lịch sử chat, chặn try/catch báo lỗi lên Frontend", "resolved": true }
+    { "error": "Gemini 429 Quota Exceeded & 400 Bad Request", "solution": "Gộp các role giống nhau trong lịch sử chat, chặn try/catch báo lỗi lên Frontend", "resolved": true },
+    { "error": "ENOENT: no such file or directory, open '/app/patches/wouter@3.7.1.patch' khi build Docker", "solution": "Thêm lệnh COPY patches/ ./patches/ vào Dockerfile trước khi pnpm install", "resolved": true }
   ],
   "decisions_made": [
     { "decision": "Dùng Docker Compose", "reason": "Chạy cả frontend và backend + database local một cách dễ dàng và đồng bộ nhất" }
