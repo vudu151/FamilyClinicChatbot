@@ -6,8 +6,9 @@ WORKDIR /app
 # Cài đặt pnpm
 RUN npm install -g pnpm
 
-# Copy files package
+# Copy files package và thư mục patches (nếu có)
 COPY package.json pnpm-lock.yaml ./
+COPY patches/ ./patches/
 
 # Install dependencies
 RUN pnpm install
@@ -26,8 +27,9 @@ WORKDIR /app
 # Cài đặt pnpm
 RUN npm install -g pnpm
 
-# Chỉ copy package.json và lock file
+# Chỉ copy package.json, lock file và patches
 COPY package.json pnpm-lock.yaml ./
+COPY patches/ ./patches/
 
 # Chỉ cài đặt các packages cần thiết cho Production (bỏ qua devDependencies)
 RUN pnpm install --prod
