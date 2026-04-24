@@ -1,20 +1,47 @@
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { ChevronLeft, LogOut, Settings, Bell, Shield, Edit2 } from 'lucide-react';
+import { ChevronLeft, LogOut, Settings, Bell, Shield, Edit2, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Profile() {
   const [, navigate] = useLocation();
 
+  const { user } = useAuth();
+  const [medicalHistory, setMedicalHistory] = useState<string>('Đang phân tích dữ liệu...');
+  const [isLoading, setIsLoading] = useState(true);
+
   const currentUser = {
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@example.com',
+    name: user?.username || 'Vũ Xuân Dự',
+    email: user?.email || 'vuxuandu@example.com',
     phone: '0123 456 789',
     avatar: '👤',
     bloodType: 'O+',
     allergies: 'Không',
-    medicalHistory: 'Không có bệnh lý',
   };
+
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("/api/chat/symptoms-summary", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMedicalHistory(data.summary || 'Không có dữ liệu bệnh lý rõ ràng.');
+        } else {
+          setMedicalHistory('Không thể tải dữ liệu bệnh lý.');
+        }
+      } catch (err) {
+        setMedicalHistory('Lỗi tải dữ liệu.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSymptoms();
+  }, []);
 
   const menuItems = [
     { icon: <Bell size={20} />, label: 'Thông báo', action: () => {} },
@@ -47,7 +74,7 @@ export default function Profile() {
               <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 {currentUser.name}
               </h2>
-              <p className="text-primary-foreground/90 mb-3">Bệnh nhân</p>
+              <p className="text-primary-foreground/90 mb-3">Người dùng</p>
               <Button
                 variant="outline"
                 className="border border-white text-white hover:bg-white/10 font-medium rounded-lg h-8 text-body-sm flex items-center gap-2"
@@ -95,8 +122,17 @@ export default function Profile() {
               <p className="text-body-md font-medium text-foreground">{currentUser.allergies}</p>
             </div>
             <div className="bg-white border border-border rounded-lg p-4">
-              <p className="text-body-sm text-muted-foreground mb-1">Tiền sử bệnh lý</p>
-              <p className="text-body-md font-medium text-foreground">{currentUser.medicalHistory}</p>
+              <p className="text-body-sm text-muted-foreground mb-1">Tiền sử bệnh lý (AI Phân tích)</p>
+              {isLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Đang trích xuất từ lịch sử chat...</span>
+                </div>
+              ) : (
+                <div className="text-body-md font-medium text-foreground whitespace-pre-wrap">
+                  {medicalHistory}
+                </div>
+              )}
             </div>
           </div>
         </div>

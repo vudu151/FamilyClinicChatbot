@@ -16,7 +16,46 @@ Vai trò của bạn là:
 3. Luôn luôn nhắc nhở người bệnh rằng bạn chỉ là một AI và khuyên họ nên đến phòng khám gặp bác sĩ nếu triệu chứng nghiêm trọng hoặc kéo dài.
 4. Ưu tiên những câu trả lời ngắn gọn, súc tích (dưới 150 chữ unless cần thiết).
 5. Nếu người bệnh gửi hình ảnh, hãy phân tích hình ảnh (ví dụ: vết thương, đơn thuốc) và đưa ra đánh giá sơ bộ nhưng luôn kèm cảnh báo y khoa.
+6. Khi người bệnh có nhu cầu "ĐẶT LỊCH KHÁM", bạn BẮT BUỘC phải hỏi họ 2 thông tin: "Bạn muốn khám với Bác sĩ nào?" và "Bạn muốn đến Phòng khám nào của chúng tôi?". Sau khi có đủ thông tin, hãy gửi lời xác nhận đặt lịch thành công.
 `;
+
+function getApiKeys(): string[] {
+  const keysStr = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY;
+  if (!keysStr || keysStr === "YOUR_GEMINI_API_KEY_HERE") return [];
+  return keysStr.split(',').map(k => k.trim()).filter(k => k.length > 0);
+}
+
+let currentKeyIndex = 0;
+
+async function generateWithFallback(aiMethod: (ai: GoogleGenAI) => Promise<any>): Promise<any> {
+  const keys = getApiKeys();
+  if (keys.length === 0) throw new Error("API_KEY_MISSING");
+
+  let attempts = 0;
+  let lastError = null;
+
+  while (attempts < keys.length) {
+    const key = keys[currentKeyIndex];
+    const ai = new GoogleGenAI({ apiKey: key });
+    
+    try {
+      const result = await aiMethod(ai);
+      return result;
+    } catch (err: any) {
+      lastError = err;
+      const errMsg = err.message?.toLowerCase() || "";
+      if (errMsg.includes('quota') || errMsg.includes('429') || err.status === 429) {
+         console.warn(`[API Key] Key at index ${currentKeyIndex} is exhausted. Switching to next key...`);
+         currentKeyIndex = (currentKeyIndex + 1) % keys.length;
+         attempts++;
+      } else {
+         throw err;
+      }
+    }
+  }
+
+  throw new Error("ALL_KEYS_EXHAUSTED");
+}
 
 // Lấy danh sách các cuộc hội thoại của user
 router.get("/", authenticateToken, async (req: AuthRequest, res) => {
@@ -45,6 +84,70 @@ router.get("/:id/messages", authenticateToken, async (req: AuthRequest, res) => 
     return res.json({ messages: msgs });
   } catch (err: any) {
     return res.status(500).json({ error: "Lỗi lấy chi tiết tin nhắn" });
+  }
+});
+
+// Phân tích lịch sử chat để trích xuất triệu chứng bệnh lý (Hồ sơ sức khỏe)
+router.get("/symptoms-summary", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    // Lấy tất cả hội thoại của user
+    const userConvs = await db.select().from(conversations).where(eq(conversations.userId, userId));
+    const convIds = userConvs.map(c => c.id);
+
+    if (convIds.length === 0) {
+      return res.json({ summary: "Chưa có dữ liệu hội thoại để phân tích." });
+    }
+
+    // Lấy tất cả tin nhắn của user
+    const allUserMsgs: string[] = [];
+    for (const cid of convIds) {
+      const msgs = await db.select().from(messages).where(eq(messages.conversationId, cid));
+      msgs.forEach(m => {
+        if (m.role === 'user' && !m.content.includes("Hình ảnh đính kèm")) {
+          allUserMsgs.push(m.content);
+        }
+      });
+    }
+
+    if (allUserMsgs.length === 0) {
+      return res.json({ summary: "Chưa có dữ liệu triệu chứng." });
+    }
+
+    const keys = getApiKeys();
+    if (keys.length === 0) {
+       return res.json({ summary: "Chức năng phân tích AI đang chờ cấu hình API Key." });
+    }
+
+    const prompt = `Đây là lịch sử các câu hỏi và lời than phiền về sức khỏe của một bệnh nhân:
+    "${allUserMsgs.join("\n")}"
+    
+    Hãy đóng vai một bác sĩ phân tích hồ sơ. Hãy trích xuất và tóm tắt ngắn gọn các "Triệu chứng y khoa" và "Tiền sử bệnh lý" mà bệnh nhân này từng gặp phải.
+    Yêu cầu:
+    - Viết dưới dạng 2-3 gạch đầu dòng ngắn gọn.
+    - Không dài dòng, không đưa ra lời khuyên chữa bệnh ở đây.
+    - Trả lời bằng tiếng Việt.`;
+
+    try {
+      const response = await generateWithFallback(ai => 
+        ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
+      
+      const summary = response.text || "Không có dữ liệu bệnh lý rõ ràng.";
+      return res.json({ summary });
+    } catch (e: any) {
+      if (e.message === "ALL_KEYS_EXHAUSTED") {
+        return res.json({ summary: "Hệ thống AI đang quá tải (Tất cả API Key đều hết hạn mức)." });
+      }
+      throw e;
+    }
+  } catch (err: any) {
+    console.error("Symptoms summary error:", err);
+    return res.status(500).json({ error: "Lỗi phân tích triệu chứng" });
   }
 });
 
@@ -94,8 +197,8 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") {
+    const keys = getApiKeys();
+    if (keys.length === 0) {
        const mockResp = "[Chế độ Dùng Thử - Cần API Key] Lời khuyên mock.";
        await db.insert(messages).values({
           id: nanoid(),
@@ -106,7 +209,6 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
        return res.json({ response: mockResp, conversationId });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
     const currentMessageParts: any[] = [];
     
     if (text) currentMessageParts.push({ text });
@@ -120,14 +222,24 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
 
     const currentContent = { role: 'user', parts: currentMessageParts };
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [...history, currentContent],
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        temperature: 0.4,
+    let response;
+    try {
+      response = await generateWithFallback(ai => 
+        ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: [...history, currentContent],
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            temperature: 0.4,
+          }
+        })
+      );
+    } catch (e: any) {
+      if (e.message === "ALL_KEYS_EXHAUSTED") {
+        throw new Error("ALL_KEYS_EXHAUSTED");
       }
-    });
+      throw e;
+    }
 
     const aiText = response.text || "Xin lỗi, tôi không thể xử lý yêu cầu lúc này.";
     
@@ -148,8 +260,8 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
   } catch (error: any) {
     console.error("AI Error:", error);
     let errMsg = error.message || "Lỗi xử lý từ AI";
-    if (errMsg.toLowerCase().includes("quota") || error?.status === 429) {
-      errMsg = "Hệ thống AI đang quá tải hoặc bạn đã dùng hết hạn mức miễn phí (Quota Exceeded). Vui lòng chờ vài giây rồi thử lại!";
+    if (errMsg === "ALL_KEYS_EXHAUSTED") {
+      errMsg = "Hệ thống AI đang quá tải hoặc tất cả các API Key đã dùng hết hạn mức miễn phí (Quota Exceeded). Vui lòng cấu hình thêm key mới hoặc thử lại vào ngày mai!";
     }
     return res.status(500).json({ error: errMsg });
   }

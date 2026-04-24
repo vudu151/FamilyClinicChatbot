@@ -14,6 +14,7 @@ export default function BottomNav() {
   const navItems: NavItem[] = [
     { id: 'home', icon: <Home size={24} />, label: 'Trang chủ', path: '/home' },
     { id: 'consultation', icon: <MessageCircle size={24} />, label: 'Hỏi Bác Sĩ (AI)', path: '/consultation' },
+    { id: 'medicine', icon: <Pill size={24} />, label: 'Thuốc', path: '/medicine' },
     { id: 'profile', icon: <User size={24} />, label: 'Hồ sơ', path: '/profile' },
   ];
 

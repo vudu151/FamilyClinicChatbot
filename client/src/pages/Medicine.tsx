@@ -2,8 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import BottomNav from '@/components/BottomNav';
 import { useLocation } from 'wouter';
-import { ChevronLeft, Search, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronLeft, Search, AlertCircle, CheckCircle2, Clock, Plus, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface Medicine {
   id: string;
@@ -16,10 +17,52 @@ interface Medicine {
   warnings: string[];
 }
 
+interface Reminder {
+  id: string;
+  medicineName: string;
+  time: string;
+  taken: boolean;
+}
+
 export default function Medicine() {
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+
+  // Load reminders từ localStorage khi khởi động
+  useEffect(() => {
+    const saved = localStorage.getItem('medicine_reminders');
+    if (saved) {
+      setReminders(JSON.parse(saved));
+    }
+  }, []);
+
+  // Hàm lưu reminders
+  const saveReminders = (newReminders: Reminder[]) => {
+    setReminders(newReminders);
+    localStorage.setItem('medicine_reminders', JSON.stringify(newReminders));
+  };
+
+  const addReminder = (medName: string) => {
+    const newReminders = [
+      ...reminders,
+      { id: Date.now().toString() + '_1', medicineName: medName, time: '08:00', taken: false },
+      { id: Date.now().toString() + '_2', medicineName: medName, time: '20:00', taken: false }
+    ];
+    saveReminders(newReminders);
+    toast.success(`Đã thêm lịch nhắc uống ${medName} vào 08:00 và 20:00 hàng ngày.`);
+  };
+
+  const toggleReminder = (id: string) => {
+    const newReminders = reminders.map(r => r.id === id ? { ...r, taken: !r.taken } : r);
+    saveReminders(newReminders);
+  };
+
+  const removeReminder = (id: string) => {
+    const newReminders = reminders.filter(r => r.id !== id);
+    saveReminders(newReminders);
+  };
 
   const medicines: Medicine[] = [
     {
@@ -165,6 +208,24 @@ export default function Medicine() {
                 </ul>
               </div>
 
+              {/* Thêm lịch nhắc uống thuốc */}
+              <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-title-sm text-foreground mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      ⏰ Nhắc nhở uống thuốc
+                    </h3>
+                    <p className="text-body-sm text-muted-foreground">Tự động báo thức 08:00 và 20:00</p>
+                  </div>
+                  <Button 
+                    onClick={() => addReminder(selectedMedicine.name)}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-full h-10 px-4 flex items-center gap-2"
+                  >
+                    <Plus size={16} /> Đặt lịch
+                  </Button>
+                </div>
+              </div>
+
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-lg h-12 transition-smooth active:scale-95">
                 Tư vấn thêm với bác sĩ
               </Button>
@@ -172,8 +233,41 @@ export default function Medicine() {
           </div>
         ) : (
           // Medicine List View
-          <>
-            {filteredMedicines.length === 0 ? (
+          <div className="space-y-6">
+            {/* Lịch nhắc thuốc (Chỉ hiện khi có dữ liệu) */}
+            {reminders.length > 0 && searchTerm === '' && (
+              <div className="bg-white border border-border rounded-lg p-4 animate-fade-in">
+                <h3 className="text-title-sm text-foreground mb-3 flex items-center gap-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  <Clock size={20} className="text-primary" /> Lịch uống thuốc hôm nay
+                </h3>
+                <div className="space-y-3">
+                  {reminders.map(reminder => (
+                    <div key={reminder.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3 flex-1" onClick={() => toggleReminder(reminder.id)}>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${reminder.taken ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                          {reminder.taken && <CheckCircle2 size={14} className="text-white" />}
+                        </div>
+                        <div>
+                          <p className={`text-body-md font-medium ${reminder.taken ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                            {reminder.medicineName}
+                          </p>
+                          <p className="text-body-sm text-primary font-bold">{reminder.time}</p>
+                        </div>
+                      </div>
+                      <button onClick={() => removeReminder(reminder.id)} className="p-2 text-destructive hover:bg-destructive/10 rounded-full transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <h3 className="text-title-sm text-foreground mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Danh mục thuốc
+              </h3>
+              {filteredMedicines.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <span className="text-5xl mb-4">💊</span>
                 <p className="text-body-md text-muted-foreground">Không tìm thấy thuốc</p>
@@ -198,7 +292,8 @@ export default function Medicine() {
                 </div>
               ))
             )}
-          </>
+            </div>
+          </div>
         )}
       </div>
 
